@@ -4,7 +4,8 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { PrismaClient } from "@prisma/client";
 import userRoute from "./routes/user.routes.js";
-import startCronJob from "./services/cronJobService.js";
+import webRoute from "./routes/website.routes.js";
+// import startCronJob from "./services/cronJobService.js";
 
 const prisma = new PrismaClient();
 const app = express();
@@ -20,8 +21,8 @@ app.use(cookieParser());
 
 const PORT = process.env.PORT;
 
-// start cron job
-startCronJob();
+// // start cron job
+// startCronJob();
 
 app.get("/", (req, res) => {
   res.json({ message: "Server is running successfully!" });
@@ -29,6 +30,7 @@ app.get("/", (req, res) => {
 
 // routes
 app.use("/user", userRoute);
+app.use("/v1/web", webRoute);
 
 app.use((req, res, next) => {
   res.status(404).json({ error: "Route not found" });

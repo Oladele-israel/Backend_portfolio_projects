@@ -21,24 +21,41 @@ model users {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   role      String?   @default("user")
-  websites  Website[] 
+  websites  website[] 
 }
 
-model Website {
+model website {
   id        String   @id @default(uuid())
   url       String   @unique
   userId    String
   createdAt DateTime @default(now())
-  checks    Check[]
   user      users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedAt   DateTime @updatedAt
+  statusChecks statusCheck[]
+    dailySummaries websiteDailySummary[]
 }
 
-model Check {
+model statusCheck {
   id          String   @id @default(uuid())
   websiteId   String
   statusCode  Int
   responseTime Float
   error       String?
   createdAt   DateTime @default(now())
-  website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  isUp        Boolean
+  website     website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  checkedAt   DateTime @default(now())
+}
+
+model websiteDailySummary {
+  id              String   @id @default(uuid())  // Use UUID for consistency
+  websiteId       String
+  date            DateTime  // Store the date
+  uptimeCount     Int
+  downtimeCount   Int
+  uptimePercentage Float
+
+  website         website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, date]) // Ensures one summary per website per day
 }
