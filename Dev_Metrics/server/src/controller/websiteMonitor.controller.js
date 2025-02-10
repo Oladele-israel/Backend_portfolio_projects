@@ -7,8 +7,6 @@ export const monitor = async (req, res) => {
   const { url } = req.body;
   const userId = req.user.id;
 
-  console.log("this is the userid --->", userId);
-
   if (!url) {
     return res.status(400).json({ message: "URL is required" });
   }
@@ -87,106 +85,68 @@ export const getWebsitesByUser = async (userId) => {
   }
 };
 
-// import axios from "axios";
-// import nodemailer from "nodemailer";
-// import prisma from "../prisma"; // Ensure this is correctly imported
+// function that fethes and deletes website by id
+export const deleteWebsiteById = async (req, res) => {
+  const { id } = req.params; // Extract website ID from request parameters
+  const userId = req.user.id; // Extract user ID from the authenticated user
 
-// export const pingWebsite = async (url, userId) => {
-//   const startTime = Date.now();
+  try {
+    // Step 1: Fetch the website by ID and ensure it belongs to the user
+    const website = await prisma.website.findUnique({
+      where: { id }, // IDs are UUIDs, no need to parse as integer
+      include: { statusChecks: true, dailySummaries: true }, // Include related records
+    });
+
+    // Step 2: Check if the website exists and belongs to the user
+    if (!website) {
+      return res.status(404).json({ message: "Website not found" });
+    }
+
+    if (website.userId !== userId) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized: You do not own this website" });
+    }
+
+    // Step 3: Delete the website and its associated data (cascades handled in Prisma schema)
+    await prisma.website.delete({
+      where: { id },
+    });
+
+    // Step 4: Return success response
+    res
+      .status(200)
+      .json({ message: "Website and associated data deleted successfully" });
+  } catch (error) {
+    // Step 5: Handle errors
+    console.error("Error deleting website:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// cron.schedule("*/2 * * * *", async () => {
+//   console.log("Running status check cleanup cron job...");
 
 //   try {
-//     const response = await axios.get(url);
+//     // Fetch all websites
+//     const websites = await prisma.website.findMany();
 
-//     // Calculate response time
-//     const responseTime = Date.now() - startTime;
-//     const responseTimeSec = parseFloat((responseTime / 1000).toFixed(3));
-
-//     // Create or connect to the website and record the check
-//     const check = await prisma.statusCheck.create({
-//       data: {
-//         website: {
-//           connectOrCreate: {
-//             where: { url },
-//             create: { url, userId },
+//     for (const website of websites) {
+//       // Delete individual status checks older than 10 minutes
+//       await prisma.statusCheck.deleteMany({
+//         where: {
+//           websiteId: website.id,
+//           createdAt: {
+//             lte: new Date(Date.now() - 2 * 60 * 1000), // Older than 10 minutes
 //           },
 //         },
-//         statusCode: response.status,
-//         responseTime: responseTimeSec,
-//         error: null,
-//         isUp: true,
-//       },
-//     });
+//       });
 
-//     return {
-//       isUp: true,
-//       responseTime: responseTime,
-//       response_secs: `${responseTimeSec} secs`,
-//       statusCode: check.statusCode,
-//     };
-//   } catch (error) {
-//     // Create status check entry for downtime
-//     const check = await prisma.statusCheck.create({
-//       data: {
-//         website: {
-//           connectOrCreate: {
-//             where: { url },
-//             create: { url, userId },
-//           },
-//         },
-//         statusCode: error.response?.status || 500,
-//         responseTime: -1,
-//         error: error.message || "Unknown error",
-//         isUp: false,
-//       },
-//     });
-
-//     // Fetch user email
-//     const user = await prisma.user.findUnique({
-//       where: { id: userId },
-//       select: { email: true },
-//     });
-
-//     if (user?.email) {
-//       await sendDowntimeEmail(user.email, url, check.error);
+//       console.log(`Deleted old status checks for ${website.url}`);
 //     }
 
-//     return {
-//       isUp: false,
-//       responseTime: check.responseTime,
-//       statusCode: check.statusCode,
-//       error: check.error,
-//     };
-//   }
-// };
-
-// // Function to send an email when the website is down
-// const sendDowntimeEmail = async (userEmail, websiteUrl, errorMessage) => {
-//   try {
-//     const transporter = nodemailer.createTransport({
-//       service: "gmail",
-//       auth: {
-//         user: process.env.EMAIL_USER, // Your email
-//         pass: process.env.EMAIL_PASS, // Your email password or app password
-//       },
-//     });
-
-//     const mailOptions = {
-//       from: `"Website Monitor" <${process.env.EMAIL_USER}>`,
-//       to: userEmail,
-//       subject: `🚨 Website Down Alert: ${websiteUrl}`,
-//       html: `
-//         <h2>Alert: Website is Down!</h2>
-//         <p>The website <strong>${websiteUrl}</strong> is currently unreachable.</p>
-//         <p><strong>Error Message:</strong> ${errorMessage}</p>
-//         <p>Please check your website's status.</p>
-//         <br />
-//         <p>Best regards,<br>Website Monitoring Service</p>
-//       `,
-//     };
-
-//     await transporter.sendMail(mailOptions);
-//     console.log(`Email sent to ${userEmail} about ${websiteUrl} being down.`);
+//     console.log("Status check cleanup cron job completed successfully.");
 //   } catch (error) {
-//     console.error("Error sending downtime email:", error);
+//     console.error("Error in status check cleanup cron job:", error);
 //   }
-// };
+// });

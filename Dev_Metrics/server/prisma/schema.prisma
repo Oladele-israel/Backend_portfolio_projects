@@ -40,12 +40,25 @@ model statusCheck {
   websiteId   String
   statusCode  Int
   responseTime Float
-  error       String?
+  dnsTime       Float?   // DNS resolution time
+  headers       String?  // Response headers as JSON
+  contentSize   Int?     // Response body size in bytes
+  contentEncoding String? // Content encoding (e.g., gzip)
+  redirectCount Int?     // Number of redirects
+  finalUrl      String?  // Final URL after redirects
+  sslInfo       String?  // SSL/TLS certificate info as JSON
+  geoLocation   String?  // Geographic location as JSON
+  error         String?
+  errorType     String?  // Type of error (e.g., DNS, timeout)
+  errorStack    String?  
   createdAt   DateTime @default(now())
   isUp        Boolean
   website     website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
   checkedAt   DateTime @default(now())
 }
+
+
+
 
 model websiteDailySummary {
   id              String   @id @default(uuid())  // Use UUID for consistency

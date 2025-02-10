@@ -5,7 +5,6 @@ import cookieParser from "cookie-parser";
 import { PrismaClient } from "@prisma/client";
 import userRoute from "./routes/user.routes.js";
 import webRoute from "./routes/website.routes.js";
-// import startCronJob from "./services/cronJobService.js";
 
 const prisma = new PrismaClient();
 const app = express();
@@ -20,9 +19,6 @@ app.use(
 app.use(cookieParser());
 
 const PORT = process.env.PORT;
-
-// // start cron job
-// startCronJob();
 
 app.get("/", (req, res) => {
   res.json({ message: "Server is running successfully!" });
