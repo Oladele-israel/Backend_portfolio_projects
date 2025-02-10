@@ -123,30 +123,3 @@ export const deleteWebsiteById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-// cron.schedule("*/2 * * * *", async () => {
-//   console.log("Running status check cleanup cron job...");
-
-//   try {
-//     // Fetch all websites
-//     const websites = await prisma.website.findMany();
-
-//     for (const website of websites) {
-//       // Delete individual status checks older than 10 minutes
-//       await prisma.statusCheck.deleteMany({
-//         where: {
-//           websiteId: website.id,
-//           createdAt: {
-//             lte: new Date(Date.now() - 2 * 60 * 1000), // Older than 10 minutes
-//           },
-//         },
-//       });
-
-//       console.log(`Deleted old status checks for ${website.url}`);
-//     }
-
-//     console.log("Status check cleanup cron job completed successfully.");
-//   } catch (error) {
-//     console.error("Error in status check cleanup cron job:", error);
-//   }
-// });
