@@ -4,6 +4,8 @@ import authBg from "../../assets/images/authbg.png";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = import.meta.env.VITE_API;
+
 const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/user/login",
+        `${API_BASE_URL}/user/login`,
         formData,
         {
           headers: { "Content-Type": "application/json" },
@@ -42,22 +44,18 @@ const Login = () => {
         alert(response.data.message || "Login failed. Please try again.");
       }
     } catch (error) {
-      // Handle axios errors
       console.error("Error during signup:", error);
       if (error.response) {
-        // The request was made and the server responded with a status code
         alert(
           error.response.data.message || "Signup failed. Please try again."
         );
       } else if (error.request) {
-        // The request was made but no response was received
         alert("No response from the server. Please try again.");
       } else {
-        // Something happened in setting up the request
         alert("An error occurred. Please try again.");
       }
     } finally {
-      setLoading(false); // Set loading back to false when the request is complete
+      setLoading(false);
     }
   };
 

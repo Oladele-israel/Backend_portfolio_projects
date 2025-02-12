@@ -4,6 +4,8 @@ import axios from "axios"; // Import axios for data fetching
 import authBg from "../../assets/images/authbg.png";
 import { ArrowLeft } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API;
+
 const Signup = () => {
   const navigate = useNavigate(); // Initialize useNavigate
 
@@ -14,10 +16,8 @@ const Signup = () => {
     password: "",
   });
 
-  // State to manage loading effect
   const [loading, setLoading] = useState(false);
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -26,15 +26,13 @@ const Signup = () => {
     });
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Set loading to true when the form is submitted
+    setLoading(true);
 
     try {
-      // Send data to the backend using axios
       const response = await axios.post(
-        "http://localhost:8000/user/signup",
+        `${API_BASE_URL}/user/signup`,
         formData,
         {
           headers: {
@@ -45,30 +43,24 @@ const Signup = () => {
       );
 
       if (response.data.success) {
-        // If the response is successful, redirect to the login page
         navigate("/login");
       } else {
-        // Handle errors (e.g., display error message)
         console.error("Signup failed:", response.data.message);
         alert(response.data.message || "Signup failed. Please try again.");
       }
     } catch (error) {
-      // Handle axios errors
       console.error("Error during signup:", error);
       if (error.response) {
-        // The request was made and the server responded with a status code
         alert(
           error.response.data.message || "Signup failed. Please try again."
         );
       } else if (error.request) {
-        // The request was made but no response was received
         alert("No response from the server. Please try again.");
       } else {
-        // Something happened in setting up the request
         alert("An error occurred. Please try again.");
       }
     } finally {
-      setLoading(false); // Set loading back to false when the request is complete
+      setLoading(false);
     }
   };
 
