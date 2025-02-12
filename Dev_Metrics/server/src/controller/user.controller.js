@@ -2,99 +2,7 @@ import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { validateUserInput, validateLogin } from "../utils/validator.js";
 import jwt from "jsonwebtoken";
-import { generateConfirmationToken } from "../utils/Mail.js";
-import { sendConfirmationEmail } from "../utils/Mail.js";
-
 const prisma = new PrismaClient();
-
-// Send mail to confirm the user email
-export const sendMailToken = async (req, res) => {
-  const { email } = req.body;
-
-  // Validate email input
-  if (!email) {
-    return res.status(400).json({
-      success: false,
-      message: "Email is required.",
-    });
-  }
-
-  try {
-    // Generate confirmation token
-    const confirmationToken = generateConfirmationToken(email);
-
-    // Send confirmation email
-    const emailResult = await sendConfirmationEmail(email, confirmationToken);
-
-    if (!emailResult.success) {
-      return res.status(500).json({
-        success: false,
-        message: emailResult.message,
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Confirmation email sent successfully. Please check your email.",
-    });
-  } catch (error) {
-    console.error("Error in sendMailToken:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Internal server error.",
-    });
-  }
-};
-export const confirmEmail = async (req, res) => {
-  const { token } = req.query;
-
-  if (!token) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Token is required." });
-  }
-
-  try {
-    // Log the token for debugging
-    console.log("Token received:", token);
-
-    // Verify token
-    const decoded = jwt.verify(token, process.env.TOKEN);
-    console.log("Decoded token:", decoded);
-
-    const email = decoded.email;
-
-    // Check if user exists
-    const user = await prisma.users.findUnique({
-      where: { email },
-    });
-
-    console.log("this is the existig user -->", user);
-    // if (user) {
-    //   // User exists, redirect to login page
-    //   return res.redirect("http://localhost:3000/login"); // Adjust frontend URL
-    // } else {
-    //   // User does not exist, redirect to signup page
-    //   return res.redirect(`http://localhost:3000/signup?email=${email}`);
-    // }
-  } catch (error) {
-    console.error("Error verifying email token:", error);
-
-    if (error.name === "TokenExpiredError") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Token has expired." });
-    } else if (error.name === "JsonWebTokenError") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid token." });
-    } else {
-      return res
-        .status(500)
-        .json({ success: false, message: "Internal server error." });
-    }
-  }
-};
 
 // create user
 export const signup = async (req, res) => {
@@ -156,7 +64,7 @@ export const signup = async (req, res) => {
         name,
         email,
         password: hashedPassword,
-        role: "user", // Default role
+        role: "user",
       },
     });
 

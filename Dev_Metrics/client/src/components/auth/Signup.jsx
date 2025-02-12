@@ -1,13 +1,75 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
+import axios from "axios"; // Import axios for data fetching
 import authBg from "../../assets/images/authbg.png";
 import { ArrowLeft } from "lucide-react";
 
 const Signup = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate(); // Initialize useNavigate
 
-  const handleSubmit = (e) => {
+  // Use a single useState to manage form data
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
+  // State to manage loading effect
+  const [loading, setLoading] = useState(false);
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsModalOpen(true);
+    setLoading(true); // Set loading to true when the form is submitted
+
+    try {
+      // Send data to the backend using axios
+      const response = await axios.post(
+        "http://localhost:8000/user/signup",
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.success) {
+        // If the response is successful, redirect to the login page
+        navigate("/login");
+      } else {
+        // Handle errors (e.g., display error message)
+        console.error("Signup failed:", response.data.message);
+        alert(response.data.message || "Signup failed. Please try again.");
+      }
+    } catch (error) {
+      // Handle axios errors
+      console.error("Error during signup:", error);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        alert(
+          error.response.data.message || "Signup failed. Please try again."
+        );
+      } else if (error.request) {
+        // The request was made but no response was received
+        alert("No response from the server. Please try again.");
+      } else {
+        // Something happened in setting up the request
+        alert("An error occurred. Please try again.");
+      }
+    } finally {
+      setLoading(false); // Set loading back to false when the request is complete
+    }
   };
 
   return (
@@ -30,44 +92,85 @@ const Signup = () => {
           already have an account? Signin
         </div>
 
-        <form action="">
+        <form onSubmit={handleSubmit}>
           <div className="flex flex-col mt-5 space-y-2 mb-2 ">
-            <label htmlFor="Email" className="text-slate-300 text-lg">
+            <label htmlFor="Name" className="text-slate-300 text-lg">
+              Name
+            </label>
+            <input
+              type="text"
+              name="name"
+              required
+              placeholder="Your Work E-mail"
+              className="p-3 rounded-md text-black"
+              value={formData.name}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className="flex flex-col mt-5 space-y-2 mb-2 ">
+            <label htmlFor="email" className="text-slate-300 text-lg">
               E-mail
             </label>
             <input
               type="email"
+              name="email"
               required
               placeholder="Your Work E-mail"
               className="p-3 rounded-md text-black"
+              value={formData.email}
+              onChange={handleInputChange}
             />
           </div>
+          <div className="flex flex-col mt-5 space-y-2 mb-2 ">
+            <label htmlFor="password" className="text-slate-300 text-lg">
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              required
+              placeholder="******"
+              className="p-3 rounded-md text-black"
+              value={formData.password}
+              onChange={handleInputChange}
+            />
+          </div>
+
           <button
             type="submit"
-            className="mt-5 bg-[#51E0CF] hover:bg-[#339c90] text-center p-3 text-black capitalize rounded-lg w-full font-bold"
+            className="mt-5 bg-[#51E0CF] hover:bg-[#339c90] text-center p-3 text-black capitalize rounded-lg w-full font-bold flex items-center justify-center"
+            disabled={loading} // Disable the button while loading
           >
-            send me a link
+            {loading ? (
+              <>
+                <svg
+                  className="animate-spin h-5 w-5 mr-3 text-black"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Signing up...
+              </>
+            ) : (
+              "Sign up"
+            )}
           </button>
         </form>
       </div>
-
-      {/* modal  */}
-      {isModalOpen && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80">
-          <div className="bg-black border-[1px] border-[#51E0CF] p-6 rounded-lg shadow-lg w-[90vw] max-w-md text-center text-white">
-            <h2 className="text-2xl font-bold">Setup Email Sent 🎉</h2>
-            <p className="mt-2 text-lg text-slate-300">
-              Check your email to finish setting up your account.
-            </p>
-            <button
-              className="mt-4 bg-[#51E0CF] hover:bg-[#339c90] p-2 rounded-lg text-black font-bold w-full"
-              onClick={() => setIsModalOpen(false)}
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

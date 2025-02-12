@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { PrismaClient } from "@prisma/client";
 import userRoute from "./routes/user.routes.js";
 import webRoute from "./routes/website.routes.js";
+import cors from "cors";
 
 const prisma = new PrismaClient();
 const app = express();
@@ -17,6 +18,14 @@ app.use(
   })
 );
 app.use(cookieParser());
+
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
+  })
+);
 
 const PORT = process.env.PORT;
 

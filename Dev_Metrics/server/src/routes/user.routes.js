@@ -4,16 +4,12 @@ import {
   login,
   logout,
   validateToken,
-  confirmEmail,
-  sendMailToken,
 } from "../controller/user.controller.js";
 
 import { checkAndRenewToken } from "../middleware/auth.middleware.js";
 
 const userRoute = express.Router();
 
-userRoute.get("/confirm-email", confirmEmail);
-userRoute.post("/sendMail", sendMailToken);
 userRoute.post("/signup", signup);
 userRoute.post("/login", login);
 userRoute.post("/logout", logout);
