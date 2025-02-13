@@ -1,91 +1,135 @@
-import authBg from "../../assets/images/authbg.png";
-import { ArrowLeft } from "lucide-react";
+import { useState } from "react";
+import { Settings } from "lucide-react";
 
 const Onboarding = () => {
+  const [formData, setFormData] = useState({
+    companyName: "",
+    companySize: "",
+    role: "",
+  });
+
+  // Options for company size and role
+  const companySizes = [
+    { value: "1-10", label: "1-10 employees" },
+    { value: "11-50", label: "11-50 employees" },
+    { value: "51-200", label: "51-200 employees" },
+    { value: "201-500", label: "201-500 employees" },
+    { value: "501+", label: "501+ employees" },
+  ];
+
+  const roles = [
+    { value: "admin", label: "Admin" },
+    { value: "manager", label: "Manager" },
+    { value: "developer", label: "Developer" },
+    { value: "analyst", label: "Analyst" },
+  ];
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Form Data Submitted:", formData);
+    // Add logic to submit the form data to your backend
+  };
   return (
-    <div
-      className="min-h-screen flex flex-col items-center bg-gradient-to-tl from-black to-slate-50 bg-cover bg-center relative"
-      style={{ backgroundImage: `url(${authBg})` }}
-    >
-      <div className="absolute inset-0 bg-black opacity-70"></div>
-      <div className="text-slate-300 relative self-start flex items-center p-2 pt-10 gap-4 mb-5">
-        <ArrowLeft className="cursor-pointer" />
-        <p>Back to Dev_metrics</p>
-      </div>
+    <div className="text-white p-6 lg:mt-10 lg:max-w-4xl">
+      {/* Page Title */}
+      <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
+        <Settings />
+        <span>Update Profile </span>
+      </h1>
 
-      <div className="bg-black border-[1px] border-[#51E0CF] p-8 rounded-lg shadow-lg w-[95vw] max-w-md relative mt-auto  flex flex-col text-white mb-10">
-        <div className="text-white text-center text-3xl">Dev_Metrics</div>
-        <div className="mt-2 text-center text-2xl font-bold text-slate-300">
-          Welcome On baord
-        </div>
-        <div className="mt-2 text-center mb-2 text-lg text-slate-300">
-          just a few more settings to set up your account 😉
+      {/* Update Profile Form */}
+      <form onSubmit={handleSubmit}>
+        {/* Company Name */}
+        <div className="bg-black p-2 rounded-md">
+          <label
+            htmlFor="companyName"
+            className="block text-sm font-medium mb-2"
+          >
+            Company Name
+          </label>
+          <input
+            type="text"
+            id="companyName"
+            name="companyName"
+            value={formData.companyName}
+            onChange={handleInputChange}
+            className="w-full p-2 bg-neutral-800 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#51E0CF]"
+            placeholder="Enter your company name"
+            required
+          />
         </div>
 
-        <form action="">
-          <div className="flex flex-col mt-5 space-y-2 mb-2 ">
-            <label htmlFor="Email" className="text-slate-300 text-lg">
-              Full Name
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="Enter your full name"
-              className="p-3 rounded-md text-black"
-            />
-          </div>
-          <div className="flex flex-col mt-5 space-y-2 mb-2 ">
-            <label htmlFor="password" className="text-slate-300 text-lg">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              placeholder="Enter a strong password"
-              className="p-3 rounded-md text-black"
-            />
-          </div>
-          <div className="flex flex-col mt-5 space-y-2 mb-2 ">
-            <label htmlFor="company_name" className="text-slate-300 text-lg">
-              Company name
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="Enter company name "
-              className="p-3 rounded-md text-black"
-            />
-          </div>
-          <div className="flex flex-col mt-5 space-y-2 mb-2 ">
-            <label htmlFor="company_name" className="text-slate-300 text-lg">
-              company Size
-            </label>
-            <select name="" id="" className="text-slate-800 p-2 rounded-md">
-              <option value="">Just me</option>
-              <option value="">Less than 5</option>
-              <option value="">Above 5</option>
-              <option value="">Above 50</option>
-            </select>
-          </div>
-          <div className="flex flex-col mt-5 space-y-2 mb-2 ">
-            <label htmlFor="company_name" className="text-slate-300 text-lg">
-              Role
-            </label>
-            <select name="" id="" className="text-slate-800 p-2 rounded-md">
-              <option value="">Intern</option>
-              <option value="">Software engineer</option>
-              <option value="">Product Manager</option>
-              <option value="">Technical support</option>
-            </select>
-          </div>
+        {/* Company Size */}
+        <div className="bg-black p-2 rounded-md">
+          <label
+            htmlFor="companySize"
+            className="block text-sm font-medium mb-2"
+          >
+            Company Size
+          </label>
+          <select
+            id="companySize"
+            name="companySize"
+            value={formData.companySize}
+            onChange={handleInputChange}
+            className="w-full p-2 bg-neutral-800 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#51E0CF]"
+            required
+          >
+            <option value="" disabled>
+              Select company size
+            </option>
+            {companySizes.map((size) => (
+              <option key={size.value} value={size.value}>
+                {size.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Role */}
+        <div className="bg-black p-2 rounded-md">
+          <label htmlFor="role" className="block text-sm font-medium mb-2">
+            Role
+          </label>
+          <select
+            id="role"
+            name="role"
+            value={formData.role}
+            onChange={handleInputChange}
+            className="w-full p-2 bg-neutral-800 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#51E0CF]"
+            required
+          >
+            <option value="" disabled>
+              Select your role
+            </option>
+            {roles.map((role) => (
+              <option key={role.value} value={role.value}>
+                {role.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Submit Button */}
+        <div className="bg-black p-2 rounded-md">
           <button
             type="submit"
-            className="mt-5 bg-[#51E0CF] hover:bg-[#339c90] text-center p-3 text-black capitalize rounded-lg w-full font-bold"
+            className="w-full bg-[#51E0CF] text-black px-4 py-2 rounded-md hover:bg-[#339c90] transition-colors font-bold"
           >
-            Finish Up
+            Update Profile
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 };

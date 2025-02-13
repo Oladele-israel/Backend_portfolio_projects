@@ -10,6 +10,7 @@ import App from "../src/App.jsx";
 import DashboardHome from "./components/dashboard/DashboardHome.jsx";
 import CreateMonitor from "./components/dashboard/CreateMonitor.jsx";
 import WebsiteDetails from "./components/dashboard/WebDetails.jsx";
+import IncidentPage from "./components/dashboard/IncidentPage.jsx";
 
 /*creating the browser router */
 const router = createBrowserRouter([
@@ -20,10 +21,6 @@ const router = createBrowserRouter([
   {
     path: "/signup",
     element: <Signup />,
-  },
-  {
-    path: "/onboarding",
-    element: <Onboarding />,
   },
   {
     path: "/login",
@@ -44,6 +41,14 @@ const router = createBrowserRouter([
       {
         path: "web_details",
         element: <WebsiteDetails />,
+      },
+      {
+        path: "incident",
+        element: <IncidentPage />,
+      },
+      {
+        path: "profile",
+        element: <Onboarding />,
       },
     ],
   },

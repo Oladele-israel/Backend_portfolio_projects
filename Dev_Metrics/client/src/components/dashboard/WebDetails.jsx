@@ -1,4 +1,4 @@
-import React from "react";
+import { SendHorizontal } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -45,51 +45,53 @@ const WebsiteDetails = () => {
   };
 
   return (
-    <div className="text-white p-6">
+    <div className="text-white p-3 lg:mt-4">
       {/* Website Name and Status */}
-      <div className="bg-black p-6 rounded-md mb-6">
+      <div className="bg-black p-6 rounded-md">
         <h1 className="text-2xl font-bold">{website.name}</h1>
-        <p className="text-sm text-gray-300">
+        <p className="text-sm text-gray-300 mt-2">
           Status:{" "}
           <span
             className={
-              website.status === "Up" ? "text-green-400" : "text-red-400"
+              website.status === "Up" ? "text-green-400" : "text-red-400 "
             }
           >
-            {website.status}
+            {website.status}{" "}
           </span>
+          <span className="text-zinc-400">.Checked every 5mins</span>
         </p>
       </div>
 
       {/* Test Alert Button */}
-      <div className="bg-black p-6 rounded-md mb-6">
-        <button className="bg-[#51E0CF] text-black px-4 py-2 rounded-md hover:bg-[#339c90] transition-colors">
-          Send Test Alert
+      <div className="bg-black p-6 rounded-md -mt-5">
+        <button className="bg-[#51E0CF] text-black px-3 py-3 rounded-md hover:bg-[#339c90] transition-colors font-bold flex gap-2 p">
+          <span>Send Test Alert</span>
+          <SendHorizontal />
         </button>
       </div>
 
       {/* Monitoring Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-black p-6 rounded-md">
+        <div className="bg-zinc-900 p-6 rounded-md">
           <h2 className="text-lg font-bold">Monitoring Duration</h2>
           <p className="text-sm text-gray-300">
             {getMonitoringDuration(website.created)}
           </p>
         </div>
-        <div className="bg-black p-6 rounded-md">
+        <div className="bg-zinc-900 p-6 rounded-md">
           <h2 className="text-lg font-bold">Last Checked</h2>
           <p className="text-sm text-gray-300">
             {formatDate(website.lastChecked)}
           </p>
         </div>
-        <div className="bg-black p-6 rounded-md">
+        <div className="bg-zinc-900 p-6 rounded-md">
           <h2 className="text-lg font-bold">Incidents</h2>
           <p className="text-sm text-gray-300">{website.incidents}</p>
         </div>
       </div>
 
       {/* Response Time Graph */}
-      <div className="bg-black p-6 rounded-md mb-6">
+      <div className=" p-6 rounded-md mb-6">
         <h2 className="text-lg font-bold mb-4">Response Time (ms)</h2>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={website.responseTimes}>
@@ -111,12 +113,12 @@ const WebsiteDetails = () => {
       </div>
 
       {/* Additional Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-black p-6 rounded-md">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div className="bg-zinc-900 p-6 rounded-md">
           <h2 className="text-lg font-bold">TLS Data Transfer</h2>
           <p className="text-sm text-gray-300">{website.tlsDataTransfer} MB</p>
         </div>
-        <div className="bg-black p-6 rounded-md">
+        <div className="bg-zinc-900 p-6 rounded-md">
           <h2 className="text-lg font-bold">DNS Lookup Time</h2>
           <p className="text-sm text-gray-300">{website.dnsLookupTime} ms</p>
         </div>

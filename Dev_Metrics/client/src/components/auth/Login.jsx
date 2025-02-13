@@ -3,7 +3,7 @@ import axios from "axios";
 import authBg from "../../assets/images/authbg.png";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import Logo from "../utils/Logo.jsx";
 const API_BASE_URL = import.meta.env.VITE_API;
 
 const Login = () => {
@@ -71,7 +71,9 @@ const Login = () => {
       </div>
 
       <div className="bg-black border-[1px] border-[#51E0CF] p-8 rounded-lg shadow-lg w-[95vw] max-w-md relative mt-auto mb-auto flex flex-col text-white">
-        <div className="text-white text-center text-3xl">Dev_Metrics</div>
+        <div className="self-center">
+          <Logo />
+        </div>
         <div className="mt-2 text-center text-2xl font-bold text-slate-300">
           Welcome Back
         </div>
@@ -90,7 +92,7 @@ const Login = () => {
               required
               placeholder="Your Work E-mail"
               value={formData.email}
-              className="p-3 rounded-md text-black"
+              className="p-3 rounded-md text-white bg-zinc-900 focus:ring-[#51E0CF]"
               onChange={handleInputChange}
             />
           </div>
@@ -103,7 +105,7 @@ const Login = () => {
               name="password"
               required
               placeholder="******"
-              className="p-3 rounded-md text-black"
+              className="p-3 rounded-md text-white  bg-zinc-900 focus:ring-[#51E0CF]"
               value={formData.password}
               onChange={handleInputChange}
             />

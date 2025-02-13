@@ -1,13 +1,7 @@
 import { useState } from "react";
-import {
-  Globe,
-  TriangleAlert,
-  Settings,
-  ChartNoAxesCombined,
-  LogOut,
-  Menu,
-  X,
-} from "lucide-react";
+import Logo from "./utils/Logo.jsx";
+import { Link } from "react-router-dom";
+import { Globe, TriangleAlert, Settings, LogOut, Menu, X } from "lucide-react";
 
 const getInitials = (name) => {
   if (!name) return "";
@@ -26,20 +20,22 @@ const SideNav = () => {
       id: "house",
       component: <Globe />,
       desc: "Monitors",
+      link: "/dashboard/",
     },
     {
-      id: "Accidents",
+      id: "Incidents",
       component: <TriangleAlert />,
       color: "text-green-400",
-      desc: "Accidents",
+      desc: "Incidents",
+      link: "/dashboard/incident",
     },
 
     {
       id: "settings",
       component: <Settings />,
       desc: "Settings",
+      link: "/dashboard/profile",
     },
-    // bg-[#FFFFFF]
   ];
 
   return (
@@ -64,7 +60,7 @@ const SideNav = () => {
 
         {/* Sidebar Navigation */}
         <nav
-          className={`fixed top-0 left-0 h-screen w-[14rem] bg-black text-slate-200 shadow-lg border-2 border-neutral-800 transition-transform ${
+          className={`fixed top-0 left-0 h-screen w-[15rem] bg-black text-slate-200 shadow-lg border-2 border-neutral-800 transition-transform ${
             menuOpen ? "translate-x-0" : "-translate-x-full"
           } lg:hidden z-50`}
         >
@@ -81,13 +77,7 @@ const SideNav = () => {
             </button>
             {/* Nav logo */}
             <div className="text-2xl text-center mt-10 p-2 mb-5">
-              <div className="flex items-center justify-center">
-                <span>Dev</span>
-                <ChartNoAxesCombined className="text-[#51E0CF]" />
-                <span>
-                  Metrics <span className="text-green-600">.</span>
-                </span>
-              </div>
+              <Logo />
             </div>
 
             {/* Nav icons */}
@@ -106,7 +96,9 @@ const SideNav = () => {
                   }`}
                 >
                   <div className="text-xl">{icon.component}</div>
-                  <p className="text-sm">{icon.desc}</p>
+                  <Link to={icon.link} className="text-sm">
+                    {icon.desc}
+                  </Link>
                 </div>
               ))}
             </div>
@@ -127,7 +119,7 @@ const SideNav = () => {
         </nav>
       </div>
 
-      {/* this is the desktop nav */}
+      {/* this is the desktop nav------------------------------------------------------------------------------------------------------------------------------- */}
 
       <nav className=" w-[14rem] h-screen fixed left-0 rounded-md lg:flex flex-col items-start gap-4 text-slate-200 hidden shadow-lg px-4 border-2 border-neutral-800">
         {/* Overlay with opacity */}
@@ -137,13 +129,7 @@ const SideNav = () => {
         <div className="relative z-10 w-full h-full flex flex-col">
           {/* Nav logo */}
           <div className="text-2xl text-center mt-10 p-2 mb-5">
-            <div className="flex items-center">
-              <span> Dev </span>
-              <ChartNoAxesCombined className="text-[#51E0CF]" />
-              <span>
-                Metrics <span className="text-green-600">.</span>
-              </span>
-            </div>
+            <Logo />
           </div>
 
           {/* Nav icons */}
@@ -159,7 +145,9 @@ const SideNav = () => {
                 }`}
               >
                 <div className="text-xl">{icon.component}</div>
-                <p className="text-sm">{icon.desc}</p>
+                <Link to={icon.link} className="text-sm">
+                  {icon.desc}
+                </Link>
               </div>
             ))}
           </div>
