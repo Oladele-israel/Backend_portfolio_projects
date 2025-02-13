@@ -4,11 +4,23 @@
 
 :root {
   --primary-color: #c3cc5a;
-  --secondary: #303030;
+  --secondary: black;
   --bg: #222222;
 }
 
 body {
   background-color: var(--secondary);
   overflow-x: hidden;
+}
+
+.overlay-container {
+  position: relative;
+}
+
+.overlay-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(239, 246, 255, 0.05); /* bg-blue-50 with opacity-5 */
+  z-index: 0;
 }

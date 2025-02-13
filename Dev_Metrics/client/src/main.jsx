@@ -8,6 +8,8 @@ import Login from "./components/auth/Login.jsx";
 import Onboarding from "./components/auth/Onboarding.jsx";
 import App from "../src/App.jsx";
 import DashboardHome from "./components/dashboard/DashboardHome.jsx";
+import CreateMonitor from "./components/dashboard/CreateMonitor.jsx";
+import WebsiteDetails from "./components/dashboard/WebDetails.jsx";
 
 /*creating the browser router */
 const router = createBrowserRouter([
@@ -32,8 +34,16 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       {
-        index: true,
+        path: "",
         element: <DashboardHome />,
+      },
+      {
+        path: "create_monitor",
+        element: <CreateMonitor />,
+      },
+      {
+        path: "web_details",
+        element: <WebsiteDetails />,
       },
     ],
   },
