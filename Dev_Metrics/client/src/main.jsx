@@ -11,6 +11,8 @@ import DashboardHome from "./components/dashboard/DashboardHome.jsx";
 import CreateMonitor from "./components/dashboard/CreateMonitor.jsx";
 import WebsiteDetails from "./components/dashboard/WebDetails.jsx";
 import IncidentPage from "./components/dashboard/IncidentPage.jsx";
+import { AuthContextProvider } from "./contexts/authContext.jsx";
+import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 
 /*creating the browser router */
 const router = createBrowserRouter([
@@ -28,7 +30,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/dashboard",
-    element: <Layout />,
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "",
@@ -56,6 +62,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <RouterProvider router={router}></RouterProvider>
+    <AuthContextProvider>
+      <RouterProvider router={router}></RouterProvider>
+    </AuthContextProvider>
   </React.StrictMode>
 );

@@ -62,7 +62,7 @@ export const checkAndRenewToken = async (req, res, next) => {
         res.cookie("Juice", newAccessToken, {
           httpOnly: true,
           sameSite: "strict",
-          secure: process.env.NODE_ENV === "production",
+          secure: false,
           maxAge: 15 * 60 * 1000, // 15 minutes
         });
 

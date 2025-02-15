@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { EllipsisVertical, CircleHelp } from "lucide-react"; // Assuming you're using Lucide React icons
+import { EllipsisVertical } from "lucide-react";
+import { AuthContext, useAuthContext } from "../../contexts/authContext.jsx";
 
 const DashboardHome = () => {
+  const { message, userDetails } = useAuthContext();
+  console.log("this is the user ---> ", userDetails, message);
+
   const monitoredWebsites = [
     { name: "google.com", status: "Up", duration: "1d 5h 30m" },
     { name: "example.com", status: "Down", duration: "2h 15m" },
@@ -51,7 +55,9 @@ const DashboardHome = () => {
 
         {/* Content */}
         <div className="relative z-10 p-5">
-          <div className="text-2xl text-white font-bold">Greetings, Ola</div>
+          <div className="text-2xl text-white font-bold">
+            Greetings, {userDetails.name}
+          </div>
           <Link
             to="/dashboard/create_monitor"
             className="text-black bg-[#51E0CF] hover:bg-[#339c90] w-36 p-2 text-center rounded-md font-bold capitalize mt-5 block"

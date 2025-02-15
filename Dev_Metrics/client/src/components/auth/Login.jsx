@@ -4,11 +4,13 @@ import authBg from "../../assets/images/authbg.png";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../utils/Logo.jsx";
-const API_BASE_URL = import.meta.env.VITE_API;
+import { useAuthContext } from "../../contexts/authContext.jsx";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const { loginUser, loading, setLoading, error } = useAuthContext();
+
+  axios.defaults.withCredentials = true;
 
   const [formData, setFormData] = useState({
     email: "",
@@ -26,34 +28,11 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/user/login`,
-        formData,
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
-      );
-      console.log("Login successful:", response.data);
-      if (response.data.success) {
-        navigate("/");
-      } else {
-        console.error("login failed:", response.data.message);
-        alert(response.data.message || "Login failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error during signup:", error);
-      if (error.response) {
-        alert(
-          error.response.data.message || "Signup failed. Please try again."
-        );
-      } else if (error.request) {
-        alert("No response from the server. Please try again.");
-      } else {
-        alert("An error occurred. Please try again.");
-      }
+      await loginUser({ email: formData.email, password: formData.password });
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Login failed:", err);
     } finally {
       setLoading(false);
     }
@@ -65,8 +44,11 @@ const Login = () => {
       style={{ backgroundImage: `url(${authBg})` }}
     >
       <div className="absolute inset-0 bg-black opacity-70"></div>
-      <div className="text-slate-300 relative self-start flex items-center p-2 pt-10 gap-4">
-        <ArrowLeft className="cursor-pointer" />
+      <div
+        className="text-slate-300 relative self-start flex items-center p-2 pt-10 gap-4 cursor-pointer"
+        onClick={() => navigate("/dashbaord")}
+      >
+        <ArrowLeft />
         <p>Back to Dev_metrics</p>
       </div>
 
@@ -80,6 +62,12 @@ const Login = () => {
         <div className="mt-2 text-center mb-2 text-lg text-slate-300">
           First time here? Sign up for free
         </div>
+
+        {error && (
+          <div className="text-red-500 text-center mb-4">
+            {error.response?.data?.message || "Login failed. Please try again."}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col mt-5 space-y-2 mb-2">
@@ -113,6 +101,7 @@ const Login = () => {
           <button
             type="submit"
             className="mt-5 bg-[#51E0CF] hover:bg-[#339c90] text-center p-3 text-black capitalize rounded-lg w-full font-bold"
+            disabled={loading}
           >
             {loading ? (
               <>

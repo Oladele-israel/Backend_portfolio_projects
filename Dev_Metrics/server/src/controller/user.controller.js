@@ -147,14 +147,14 @@ export const login = async (req, res) => {
     // Set cookies
     res.cookie("Juice", accessToken, {
       httpOnly: true,
-      sameSite: "none",
+      sameSite: "strict",
       maxAge: 10 * 60 * 1000,
-      // secure: true,
+      secure: false,
     });
     res.cookie("Sauce", refreshToken, {
       httpOnly: true,
-      // secure: true,
-      sameSite: "none",
+      secure: false,
+      sameSite: "strict",
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
 
@@ -191,7 +191,13 @@ export const logout = async (req, res) => {
 };
 
 export const validateToken = (req, res) => {
-  const authUser = req.user;
+  const authUser = req.user; // Ensure `req.user` is populated by your authentication middleware
+  if (!authUser) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized: Invalid or expired token.",
+    });
+  }
   res.status(200).json({
     success: true,
     message: "Authorized",

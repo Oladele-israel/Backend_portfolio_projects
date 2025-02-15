@@ -2,6 +2,7 @@ import { useState } from "react";
 import Logo from "./utils/Logo.jsx";
 import { Link } from "react-router-dom";
 import { Globe, TriangleAlert, Settings, LogOut, Menu, X } from "lucide-react";
+import { AuthContext, useAuthContext } from "../contexts/authContext.jsx";
 
 const getInitials = (name) => {
   if (!name) return "";
@@ -11,6 +12,7 @@ const getInitials = (name) => {
 };
 
 const SideNav = () => {
+  const { message, userDetails } = useAuthContext();
   const [activeIcon, setActiveIcon] = useState(null);
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -107,7 +109,7 @@ const SideNav = () => {
             <div className="mt-auto flex flex-col items-center gap-10 w-full p-2">
               <div className="flex items-center gap-4 w-full p-2">
                 <div className="flex items-center justify-center gap-2 rounded-full bg-black w-12 h-12 text-center text-slate-200 font-medium">
-                  OL
+                  {getInitials(userDetails.name)}
                 </div>
                 <button className="flex items-center gap-2 cursor-pointer text-slate-200 hover:text-white transition-colors">
                   <LogOut size={20} />
@@ -156,7 +158,7 @@ const SideNav = () => {
           <div className="mt-auto flex flex-col items-center gap-10 w-full p-2">
             <div className="flex items-center gap-4 w-full p-2">
               <div className="flex items-center justify-center gap-2 rounded-full bg-black w-12 h-12 text-center text-slate-200 font-medium">
-                OL
+                {getInitials(userDetails.name)}
               </div>
               <button className="flex items-center gap-2 cursor-pointer text-slate-200 hover:text-white transition-colors">
                 <LogOut size={20} />

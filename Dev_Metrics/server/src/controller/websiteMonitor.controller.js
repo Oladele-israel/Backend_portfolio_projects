@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 // a controller that gets and saves the weburl on the database and then starts the monitoring
 export const monitor = async (req, res) => {
-  const { url } = req.body;
+  const { url, alert_when, contact_mode } = req.body;
   const userId = req.user.id;
 
   if (!url) {
@@ -20,12 +20,14 @@ export const monitor = async (req, res) => {
       await prisma.website.create({
         data: {
           url,
+          alert_when,
+          contact_mode,
           userId,
         },
       });
     }
 
-    const result = await pingWebsite(url, userId);
+    const result = await pingWebsite(url, userId); // Assuming pingWebsite is a function to monitor the website
 
     res.json({
       success: true,

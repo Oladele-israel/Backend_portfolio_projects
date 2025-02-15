@@ -27,6 +27,8 @@ model users {
 model website {
   id        String   @id @default(uuid())
   url       String   @unique
+ contact_mode  String   @default("E-mail") // Add a default value
+  alert_when    String   @default("URL becomes unavailable") // Add a default value
   userId    String
   createdAt DateTime @default(now())
   user      users    @relation(fields: [userId], references: [id], onDelete: Cascade)
