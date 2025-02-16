@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../utils/Logo.jsx";
 import { useAuthContext } from "../../contexts/authContext.jsx";
+import { Link } from "react-router-dom";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ const Login = () => {
         onClick={() => navigate("/dashbaord")}
       >
         <ArrowLeft />
-        <p>Back to Dev_metrics</p>
+        <Link to="/">Back to Dev_metrics</Link>
       </div>
 
       <div className="bg-black border-[1px] border-[#51E0CF] p-8 rounded-lg shadow-lg w-[95vw] max-w-md relative mt-auto mb-auto flex flex-col text-white">
@@ -60,7 +61,7 @@ const Login = () => {
           Welcome Back
         </div>
         <div className="mt-2 text-center mb-2 text-lg text-slate-300">
-          First time here? Sign up for free
+          First time here? <Link to="/signup"> Sign up for free </Link>
         </div>
 
         {error && (

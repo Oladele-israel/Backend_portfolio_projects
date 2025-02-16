@@ -4,6 +4,7 @@ import axios from "axios"; // Import axios for data fetching
 import authBg from "../../assets/images/authbg.png";
 import { ArrowLeft } from "lucide-react";
 import Logo from "../utils/Logo.jsx";
+import { Link } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_API;
 
@@ -73,7 +74,7 @@ const Signup = () => {
       <div className="absolute inset-0 bg-black opacity-70"></div>
       <div className="text-slate-300 relative self-start flex items-center p-2 pt-10 gap-4 ">
         <ArrowLeft className="cursor-pointer" />
-        <p>Back to Dev_metrics</p>
+        <Link to="/">Back to Dev_metrics</Link>
       </div>
 
       <div className="bg-black border-[1px] border-[#51E0CF] p-8 rounded-lg shadow-lg w-[95vw] max-w-md relative mt-auto mb-auto flex flex-col text-white">
@@ -85,7 +86,7 @@ const Signup = () => {
           Sign up for free
         </div>
         <div className="mt-2 text-center mb-2 text-lg text-slate-300">
-          already have an account? Signin
+          already have an account? <Link to="/login">Login</Link>
         </div>
 
         <form onSubmit={handleSubmit}>
