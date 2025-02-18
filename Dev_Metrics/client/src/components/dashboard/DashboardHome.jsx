@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { EllipsisVertical } from "lucide-react";
-import { AuthContext, useAuthContext } from "../../contexts/authContext.jsx";
+import { useAuthContext } from "../../contexts/authContext.jsx";
+import axios from "axios";
+import io from "socket.io-client"; // Import Socket.IO client
+
+const baseURL = import.meta.env.VITE_API;
 
 const DashboardHome = () => {
   const { message, userDetails } = useAuthContext();
-  console.log("this is the user ---> ", userDetails, message);
-
-  const monitoredWebsites = [
-    { name: "google.com", status: "Up", duration: "1d 5h 30m" },
-    { name: "example.com", status: "Down", duration: "2h 15m" },
-    { name: "test.com", status: "Up", duration: "3d 10h 45m" },
-  ];
+  const [loading, setLoading] = useState(false);
+  const [lastStatusChecks, setLastStatusChecks] = useState([]);
+  const socketRef = useRef(null); // Use a ref to store the socket instance
 
   // State to manage which website's dropdown is open
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
@@ -46,6 +46,92 @@ const DashboardHome = () => {
     };
   }, []);
 
+  // Fetch website details from the database
+  useEffect(() => {
+    const websiteDetails = async () => {
+      if (!userDetails?.id) return; // Ensure userDetails.id is available
+
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `${baseURL}/v1/web/userWebsites/${userDetails.id}`,
+          {
+            withCredentials: true,
+          }
+        );
+
+        const websiteData = response.data.data;
+        console.log("Fetched website data:", websiteData);
+
+        // Get the most recent data helper
+        const extractLastStatusCheck = (websites) => {
+          return websites.map((website) => {
+            const lastStatusCheck =
+              website.statusChecks[website.statusChecks.length - 1];
+            return {
+              url: website.url,
+              isUp: lastStatusCheck.isUp,
+              responseTime: lastStatusCheck.responseTime,
+              checkedAt: lastStatusCheck.checkedAt,
+            };
+          });
+        };
+
+        const lastStatusChecks = extractLastStatusCheck(websiteData);
+        setLastStatusChecks(lastStatusChecks); // Update state with last status checks
+      } catch (error) {
+        console.log("Error fetching website details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    websiteDetails();
+  }, [userDetails]); // Add userDetails as a dependency
+
+  // Set up Socket.IO connection
+  useEffect(() => {
+    if (!userDetails?.id) return; // Ensure userDetails.id is available
+
+    // Initialize Socket.IO connection with correct options
+    socketRef.current = io(baseURL, {
+      transports: ["websocket"], // Ensure WebSocket transport is prioritized
+      withCredentials: true, // Ensure credentials are sent if needed
+      query: { userId: userDetails.id }, // Send userId to the server
+    });
+
+    socketRef.current.on("connect", () => {
+      console.log("Connected to WebSocket server:", socketRef.current.id);
+    });
+
+    socketRef.current.on("connect_error", (err) => {
+      console.error("WebSocket connection error:", err);
+    });
+
+    // Listen for real-time updates
+    socketRef.current.on("websiteStatusUpdate", (data) => {
+      console.log("Received real-time update: =====>", data);
+
+      // Update state with the new status
+      setLastStatusChecks((prev) => {
+        const updatedStatusChecks = prev.map((website) =>
+          website.url === data.url
+            ? { ...website, isUp: data.isUp, checkedAt: data.checkedAt }
+            : website
+        );
+        console.log("Updated status checks:", updatedStatusChecks);
+        return updatedStatusChecks;
+      });
+    });
+
+    // Cleanup on unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        console.log("Disconnected from WebSocket");
+      }
+    };
+  }, [userDetails]);
+
   return (
     <div className="text-white pt-10 max-w-7xl">
       {/* Greetings Section */}
@@ -56,7 +142,8 @@ const DashboardHome = () => {
         {/* Content */}
         <div className="relative z-10 p-5">
           <div className="text-2xl text-white font-bold">
-            Greetings, {userDetails.name}
+            Greetings, {userDetails?.name || "User"}{" "}
+            {/* Handle null userDetails */}
           </div>
           <Link
             to="/dashboard/create_monitor"
@@ -80,7 +167,7 @@ const DashboardHome = () => {
           </div>
 
           {/* List of monitored websites */}
-          {monitoredWebsites.map((website, index) => (
+          {lastStatusChecks.map((website, index) => (
             <div
               key={index}
               className="flex items-center justify-between mt-4 w-[95%] border-b pb-5 border-b-zinc-900 hover:bg-zinc-400 hover:bg-opacity-10 transition-colors duration-200 p-2"
@@ -88,16 +175,18 @@ const DashboardHome = () => {
               {/* Status Indicator */}
               <div
                 className={`w-2 h-2 rounded-full ${
-                  website.status === "Up" ? "bg-green-400" : "bg-red-400"
+                  website.isUp ? "bg-green-400" : "bg-red-400"
                 }`}
               ></div>
 
               {/* Website Details */}
               <div className="flex gap-2 text-white">
-                <div>{website.name}</div>
+                <div>{website.url}</div>
                 <div className="flex gap-2">
-                  <span>{website.status}</span>
-                  <span className="text-gray-300">{website.duration}</span>
+                  <span>{website.isUp ? "Up" : "Down"}</span>
+                  <span className="text-gray-300">
+                    {new Date(website.checkedAt).toLocaleString()}
+                  </span>
                   {/* Vertical Dots Icon */}
                   <div className="relative" ref={dropdownRef}>
                     <EllipsisVertical

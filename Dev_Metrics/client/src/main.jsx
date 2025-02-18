@@ -14,7 +14,6 @@ import IncidentPage from "./components/dashboard/IncidentPage.jsx";
 import { AuthContextProvider } from "./contexts/authContext.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 
-/*creating the browser router */
 const router = createBrowserRouter([
   {
     path: "/",

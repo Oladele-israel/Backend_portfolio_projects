@@ -61,29 +61,13 @@ export const websiteCheck = async (req, res) => {
       return res.status(404).json({ message: "Website not found" });
     }
 
-    res.json(website.statusChecks);
+    res.status(200).json({
+      success: true,
+      data: website,
+    });
   } catch (error) {
     console.error("Error fetching website:", error);
     res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-// function that fetches user
-export const getWebsitesByUser = async (userId) => {
-  if (!userId) {
-    throw new Error("userId must be provided!");
-  }
-
-  try {
-    const userWebsites = await prisma.website.findMany({
-      where: { userId },
-    });
-
-    console.log("These are the user's websites -->", userWebsites);
-    return userWebsites; // Ensure the function returns the fetched websites
-  } catch (error) {
-    console.error("Error fetching websites:", error);
-    throw error; // Rethrow the error for handling in the caller function
   }
 };
 
@@ -122,6 +106,34 @@ export const deleteWebsiteById = async (req, res) => {
   } catch (error) {
     // Step 5: Handle errors
     console.error("Error deleting website:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getWebsitesByUser = async (req, res) => {
+  const userId = req.user.id; // Assuming the user ID is available in the request object
+
+  console.log("this is the user ID---->", userId);
+
+  try {
+    // Fetch all websites associated with the user
+    const websites = await prisma.website.findMany({
+      where: { userId },
+      include: { statusChecks: true }, // Include the status checks for each website
+    });
+
+    if (!websites || websites.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No websites found for this user" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: websites,
+    });
+  } catch (error) {
+    console.error("Error fetching websites:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

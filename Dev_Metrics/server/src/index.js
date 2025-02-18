@@ -1,4 +1,4 @@
-import express from "express";
+import http from "http";
 import "dotenv/config";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -6,9 +6,25 @@ import { PrismaClient } from "@prisma/client";
 import userRoute from "./routes/user.routes.js";
 import webRoute from "./routes/website.routes.js";
 import cors from "cors";
+import { Server } from "socket.io"; // Import Server from socket.io
+import express from "express";
 
 const prisma = new PrismaClient();
 const app = express();
+
+// Create an HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173", // Allow your frontend URL
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
+  },
+});
+
+// Socket.IO connection handler
 
 // Middleware
 app.use(express.json());
@@ -29,11 +45,20 @@ app.use(
 
 const PORT = process.env.PORT;
 
+io.on("connection", (socket) => {
+  console.log("A client connected:", socket.id);
+
+  // Handle disconnection
+  socket.on("disconnect", () => {
+    console.log("A client disconnected:", socket.id);
+  });
+});
+
 app.get("/", (req, res) => {
   res.json({ message: "Server is running successfully!" });
 });
 
-// routes
+// Routes
 app.use("/user", userRoute);
 app.use("/v1/web", webRoute);
 
@@ -46,7 +71,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-app.listen(PORT, async () => {
+// Start the server
+server.listen(PORT, async () => {
   try {
     await prisma.$connect();
     console.log("Connected to the database");
@@ -56,3 +82,6 @@ app.listen(PORT, async () => {
     process.exit(1);
   }
 });
+
+// Export the io instance for use in other modules
+export { io };

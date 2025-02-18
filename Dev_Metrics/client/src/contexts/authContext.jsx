@@ -16,6 +16,7 @@ export const AuthContextProvider = ({ children }) => {
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [monitors, setMonitors] = useState([]);
 
   axios.defaults.withCredentials = true;
 
@@ -41,7 +42,7 @@ export const AuthContextProvider = ({ children }) => {
         const response = await axios.get(`${baseURL}/user/authUser`, {
           withCredentials: true,
         });
-        console.log(response);
+
         if (response?.data?.success) {
           setUserDetails(response.data.authUser); // Ensure the key matches the server response
           setMessage(response.data.message);
@@ -70,6 +71,8 @@ export const AuthContextProvider = ({ children }) => {
         loading,
         setLoading,
         loginUser,
+        monitors,
+        setMonitors,
         error,
         message,
       }}

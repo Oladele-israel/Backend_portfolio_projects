@@ -5,6 +5,7 @@ import dns from "dns";
 import { performance } from "perf_hooks";
 import https from "https";
 import ipinfo from "ipinfo";
+import { io } from "../index.js";
 
 const prisma = new PrismaClient();
 
@@ -151,7 +152,8 @@ const getSSLCertificateInfo = async (url) => {
 };
 
 // cron job to ping  the websitwe every 5mins and saves the request in the database
-cron.schedule("*/5 * * * *", async () => {
+// cron job to ping the website every 5 minutes and save the request in the database
+cron.schedule("*/1 * * * *", async () => {
   console.log("Running 5mins ping cron...");
 
   try {
@@ -180,7 +182,18 @@ cron.schedule("*/5 * * * *", async () => {
         await Promise.all(
           urls.map(async (url) => {
             try {
-              await pingWebsite(url, userId);
+              const result = await pingWebsite(url, userId);
+              io.to(userId).emit("websiteStatusUpdate", {
+                url,
+                isUp: result.isUp,
+                responseTime: result.responseTime,
+                checkedAt: new Date().toISOString(),
+              });
+              console.log(`Sent update to user ${userId} for ${url}:`, {
+                isUp: result.isUp,
+                responseTime: result.responseTime,
+              });
+              // Emit a Socket.IO event to the frontend
             } catch (error) {
               console.error(`Failed to ping ${url} for user ${userId}:`, error);
             }
