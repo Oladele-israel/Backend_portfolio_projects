@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { SendHorizontal } from "lucide-react";
+import axios from "axios";
 import {
   LineChart,
   Line,
@@ -10,25 +13,42 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const WebsiteDetails = () => {
-  // Mock data for the website
-  const website = {
-    name: "example.com",
-    status: "Up",
-    created: "2023-10-01T12:00:00Z", // ISO format
-    lastChecked: "2023-10-25T14:30:00Z", // ISO format
-    incidents: 3,
-    responseTimes: [
-      { time: "2023-10-25T10:00:00Z", responseTime: 120 },
-      { time: "2023-10-25T11:00:00Z", responseTime: 150 },
-      { time: "2023-10-25T12:00:00Z", responseTime: 200 },
-      { time: "2023-10-25T13:00:00Z", responseTime: 180 },
-      { time: "2023-10-25T14:00:00Z", responseTime: 160 },
-    ],
-    tlsDataTransfer: 512, // in MB
-    dnsLookupTime: 50, // in ms
-  };
+const baseURL = import.meta.env.VITE_API;
 
+function getLatestStatusCheck(data) {
+  if (!data.statusChecks || data.statusChecks.length === 0) {
+    return null; // Return null if no status checks are available
+  }
+
+  // Sort status checks by `checkedAt` in descending order and return the latest entry
+  return data.statusChecks.reduce((latest, current) =>
+    new Date(current.checkedAt) > new Date(latest.checkedAt) ? current : latest
+  );
+}
+
+const WebsiteDetails = () => {
+  const { id } = useParams();
+  const [website, setWebsite] = useState(null);
+
+  useEffect(() => {
+    // Fetch website details based on the ID
+    const fetchWebsiteDetails = async () => {
+      const response = await axios.get(`${baseURL}/v1/web/websiteCheck/${id}`, {
+        withCredentials: true,
+      });
+      const data = response.data.data;
+      console.log("this is the website details --->", data);
+      setWebsite(data);
+    };
+
+    fetchWebsiteDetails();
+  }, []);
+
+  if (!website) {
+    return <div>Loading...</div>;
+  }
+  console.log("this is the lastChecked ---->", getLatestStatusCheck(website));
+  const lastCheckedDetails = getLatestStatusCheck(website);
   // Format date to local time zone
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -44,19 +64,26 @@ const WebsiteDetails = () => {
     return `${diffInDays} days`;
   };
 
+  // data foor graph
+  const graphData = website.statusChecks.map((check) => ({
+    time: formatDate(check.checkedAt),
+    responseTime: check.responseTime,
+    status: check.isUp ? "Up" : "Down",
+  }));
+
   return (
     <div className="text-white p-3 lg:mt-4">
       {/* Website Name and Status */}
       <div className="bg-black p-6 rounded-md">
-        <h1 className="text-2xl font-bold">{website.name}</h1>
+        <h1 className="text-2xl font-bold">{website.url}</h1>
         <p className="text-sm text-gray-300 mt-2">
           Status:{" "}
           <span
             className={
-              website.status === "Up" ? "text-green-400" : "text-red-400 "
+              lastCheckedDetails.isUp ? "text-green-400" : "text-red-400 "
             }
           >
-            {website.status}{" "}
+            {website.statusChecks[0].isUp ? "Up" : "Down"}
           </span>
           <span className="text-zinc-400">.Checked every 5mins</span>
         </p>
@@ -75,18 +102,21 @@ const WebsiteDetails = () => {
         <div className="bg-zinc-900 p-6 rounded-md">
           <h2 className="text-lg font-bold">Monitoring Duration</h2>
           <p className="text-sm text-gray-300">
-            {getMonitoringDuration(website.created)}
+            {getMonitoringDuration(website.createdAt)}
           </p>
         </div>
         <div className="bg-zinc-900 p-6 rounded-md">
           <h2 className="text-lg font-bold">Last Checked</h2>
           <p className="text-sm text-gray-300">
-            {formatDate(website.lastChecked)}
+            {formatDate(lastCheckedDetails.checkedAt)}
           </p>
         </div>
         <div className="bg-zinc-900 p-6 rounded-md">
           <h2 className="text-lg font-bold">Incidents</h2>
-          <p className="text-sm text-gray-300">{website.incidents}</p>
+          <p className="text-sm text-gray-300">
+            {" "}
+            {website.statusChecks.filter((check) => !check.isUp).length}
+          </p>
         </div>
       </div>
 
@@ -94,7 +124,7 @@ const WebsiteDetails = () => {
       <div className=" p-6 rounded-md mb-6">
         <h2 className="text-lg font-bold mb-4">Response Time (ms)</h2>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={website.responseTimes}>
+          <LineChart data={graphData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#333" />
             <XAxis dataKey="time" tick={{ fill: "#fff" }} />
             <YAxis tick={{ fill: "#fff" }} />
@@ -115,13 +145,42 @@ const WebsiteDetails = () => {
       {/* Additional Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <div className="bg-zinc-900 p-6 rounded-md">
-          <h2 className="text-lg font-bold">TLS Data Transfer</h2>
-          <p className="text-sm text-gray-300">{website.tlsDataTransfer} MB</p>
-        </div>
-        <div className="bg-zinc-900 p-6 rounded-md">
           <h2 className="text-lg font-bold">DNS Lookup Time</h2>
-          <p className="text-sm text-gray-300">{website.dnsLookupTime} ms</p>
+          <p className="text-sm text-gray-300">
+            {lastCheckedDetails.dnsTime} ms
+          </p>
         </div>
+      </div>
+
+      {/* Status Checks Table */}
+      <div className="bg-zinc-900 p-6 rounded-md">
+        <h2 className="text-lg font-bold mb-4">Status Checks</h2>
+        <table className="w-full text-left">
+          <thead>
+            <tr>
+              <th className="p-2">Time</th>
+              <th className="p-2">Status</th>
+              <th className="p-2">Response Time (ms)</th>
+              <th className="p-2">Status Code</th>
+            </tr>
+          </thead>
+          <tbody>
+            {website.statusChecks.map((check, index) => (
+              <tr key={index} className="border-b border-zinc-800">
+                <td className="p-2">{formatDate(check.checkedAt)}</td>
+                <td className="p-2">
+                  <span
+                    className={check.isUp ? "text-green-400" : "text-red-400"}
+                  >
+                    {check.isUp ? "Up" : "Down"}
+                  </span>
+                </td>
+                <td className="p-2">{check.responseTime}</td>
+                <td className="p-2">{check.statusCode}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

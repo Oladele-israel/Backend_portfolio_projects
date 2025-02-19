@@ -44,7 +44,7 @@ const router = createBrowserRouter([
         element: <CreateMonitor />,
       },
       {
-        path: "web_details",
+        path: "web_details/:id",
         element: <WebsiteDetails />,
       },
       {

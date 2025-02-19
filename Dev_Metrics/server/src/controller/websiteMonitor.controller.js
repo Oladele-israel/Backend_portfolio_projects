@@ -16,27 +16,32 @@ export const monitor = async (req, res) => {
       where: { url },
     });
 
-    if (!existingWebsite) {
-      await prisma.website.create({
-        data: {
-          url,
-          alert_when,
-          contact_mode,
-          userId,
-        },
+    if (existingWebsite) {
+      return res.status(400).json({
+        success: false,
+        message: "This URL is already being monitored.",
       });
     }
 
+    await prisma.website.create({
+      data: {
+        url,
+        alert_when,
+        contact_mode,
+        userId,
+      },
+    });
+
     const result = await pingWebsite(url, userId); // Assuming pingWebsite is a function to monitor the website
 
-    res.json({
+    return res.json({
       success: true,
       message: "Website monitoring started",
       data: result,
     });
   } catch (error) {
     console.error("Error in monitor function:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Internal server error",
     });

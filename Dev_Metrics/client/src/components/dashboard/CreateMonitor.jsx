@@ -2,11 +2,13 @@ import { CircleHelp } from "lucide-react";
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../../contexts/authContext.jsx";
 
 const baseURL = import.meta.env.VITE_API;
 
 const CreateMonitor = () => {
   const [loading, setLoading] = useState(false);
+  const { userDetails, setStatusCheck } = useAuthContext();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -35,6 +37,31 @@ const CreateMonitor = () => {
 
       if (response.data.success) {
         alert("Monitor created successfully!");
+        // updaate the monitor with the new monitor
+        const websiteResponse = await axios.get(
+          `${baseURL}/v1/web/userWebsites/${userDetails.id}`,
+          { withCredentials: true }
+        );
+
+        const websiteData = websiteResponse.data.data;
+        if (websiteData.length > 0) {
+          const latestWebsite = websiteData[websiteData.length - 1];
+          const lastStatusCheck =
+            latestWebsite.statusChecks[latestWebsite.statusChecks.length - 1];
+
+          // Update statusCheck state in AuthContext
+          setStatusCheck((prev) => [
+            ...prev,
+            {
+              url: latestWebsite.url,
+              id: latestWebsite.id,
+              isUp: lastStatusCheck?.isUp || false,
+              responseTime: lastStatusCheck?.responseTime || 0,
+              checkedAt: lastStatusCheck?.checkedAt || new Date().toISOString(),
+            },
+          ]);
+        }
+
         navigate("/dashboard");
       } else {
         alert("Failed to create monitor. Please try again.");

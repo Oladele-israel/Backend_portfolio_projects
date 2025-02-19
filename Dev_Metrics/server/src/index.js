@@ -24,9 +24,6 @@ const io = new Server(server, {
   },
 });
 
-// Socket.IO connection handler
-
-// Middleware
 app.use(express.json());
 app.use(
   helmet({
@@ -45,8 +42,20 @@ app.use(
 
 const PORT = process.env.PORT;
 
+// array to store and track the connected users by their unique ids respective to the socketId created
+const activeSockets = {};
+
+// get the active user utility function
+export const getUserSocket = (userId) => {
+  return activeSockets[userId];
+};
+
+// socket connection
 io.on("connection", (socket) => {
   console.log("A client connected:", socket.id);
+  console.log("Socket===>", socket.handshake.query);
+  const userId = socket.handshake.query.userId;
+  if (userId != "undefined") activeSockets[userId] = socket.id;
 
   // Handle disconnection
   socket.on("disconnect", () => {
