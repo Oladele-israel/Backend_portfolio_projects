@@ -153,61 +153,61 @@ const getSSLCertificateInfo = async (url) => {
 
 // cron job to ping  the websitwe every 5mins and saves the request in the database
 // cron job to ping the website every 5 minutes and save the request in the database
-cron.schedule("*/5 * * * *", async () => {
-  console.log("Running 5mins ping cron...");
+// cron.schedule("*/5 * * * *", async () => {
+//   console.log("Running 5mins ping cron...");
 
-  try {
-    // Fetch all websites with associated users in one query
-    const websites = await prisma.website.findMany({
-      select: { url: true, userId: true },
-    });
+//   try {
+//     // Fetch all websites with associated users in one query
+//     const websites = await prisma.website.findMany({
+//       select: { url: true, userId: true },
+//     });
 
-    if (websites.length === 0) {
-      console.log("No websites found to check.");
-      return;
-    }
+//     if (websites.length === 0) {
+//       console.log("No websites found to check.");
+//       return;
+//     }
 
-    // Group websites by userId
-    const websitesByUser = websites.reduce((acc, { userId, url }) => {
-      if (!acc[userId]) acc[userId] = [];
-      acc[userId].push(url);
-      return acc;
-    }, {});
+//     // Group websites by userId
+//     const websitesByUser = websites.reduce((acc, { userId, url }) => {
+//       if (!acc[userId]) acc[userId] = [];
+//       acc[userId].push(url);
+//       return acc;
+//     }, {});
 
-    // Ping all websites concurrently
-    await Promise.all(
-      Object.entries(websitesByUser).map(async ([userId, urls]) => {
-        console.log(`Pinging ${urls.length} websites for user: ${userId}`);
+//     // Ping all websites concurrently
+//     await Promise.all(
+//       Object.entries(websitesByUser).map(async ([userId, urls]) => {
+//         console.log(`Pinging ${urls.length} websites for user: ${userId}`);
 
-        await Promise.all(
-          urls.map(async (url) => {
-            try {
-              const result = await pingWebsite(url, userId);
-              io.to(getUserSocket(userId)).emit("websiteStatusUpdate", {
-                url,
-                id,
-                isUp: result.isUp,
-                responseTime: result.responseTime,
-                checkedAt: new Date().toISOString(),
-              });
-              console.log(`Sent update to user ${userId} for ${url}:`, {
-                isUp: result.isUp,
-                responseTime: result.responseTime,
-              });
-              // Emit a Socket.IO event to the frontend
-            } catch (error) {
-              console.error(`Failed to ping ${url} for user ${userId}:`, error);
-            }
-          })
-        );
-      })
-    );
+//         await Promise.all(
+//           urls.map(async (url) => {
+//             try {
+//               const result = await pingWebsite(url, userId);
+//               io.to(getUserSocket(userId)).emit("websiteStatusUpdate", {
+//                 url,
+//                 id,
+//                 isUp: result.isUp,
+//                 responseTime: result.responseTime,
+//                 checkedAt: new Date().toISOString(),
+//               });
+//               console.log(`Sent update to user ${userId} for ${url}:`, {
+//                 isUp: result.isUp,
+//                 responseTime: result.responseTime,
+//               });
+//               // Emit a Socket.IO event to the frontend
+//             } catch (error) {
+//               console.error(`Failed to ping ${url} for user ${userId}:`, error);
+//             }
+//           })
+//         );
+//       })
+//     );
 
-    console.log("5mins Cron completed successfully, see you in 5✌.");
-  } catch (error) {
-    console.error("Error in cron job:", error);
-  }
-});
+//     console.log("5mins Cron completed successfully, see you in 5✌.");
+//   } catch (error) {
+//     console.error("Error in cron job:", error);
+//   }
+// });
 
 // Cron job to aggregate data and delete old entries at 12:00 AM midnight
 cron.schedule("0 0 * * *", async () => {
@@ -290,3 +290,60 @@ cron.schedule("0 0 * * *", async () => {
 // if the websiste is down sends email to owner of the website with details as to why the webite is down
 // daily sumaary of how to website performed in terms of how many when it was down and when it came back up
 // ----------------------MVP-------------------------------------------------------------------------------
+
+cron.schedule("*/5 * * * *", async () => {
+  console.log("Running 5mins ping cron...");
+
+  try {
+    // Fetch all websites with associated users and their IDs in one query
+    const websites = await prisma.website.findMany({
+      select: { id: true, url: true, userId: true }, // Include the website ID
+    });
+
+    if (websites.length === 0) {
+      console.log("No websites found to check.");
+      return;
+    }
+
+    // Group websites by userId
+    const websitesByUser = websites.reduce((acc, { userId, url, id }) => {
+      if (!acc[userId]) acc[userId] = [];
+      acc[userId].push({ url, id }); // Include the website ID in the group
+      return acc;
+    }, {});
+
+    // Ping all websites concurrently
+    await Promise.all(
+      Object.entries(websitesByUser).map(async ([userId, websites]) => {
+        console.log(`Pinging ${websites.length} websites for user: ${userId}`);
+
+        await Promise.all(
+          websites.map(async ({ url, id }) => {
+            // Destructure url and id
+            try {
+              const result = await pingWebsite(url, userId);
+              io.to(getUserSocket(userId)).emit("websiteStatusUpdate", {
+                url,
+                id, // Pass the website ID here
+                isUp: result.isUp,
+                responseTime: result.responseTime,
+                checkedAt: new Date().toISOString(),
+              });
+              console.log(`Sent update to user ${userId} for ${url}:`, {
+                isUp: result.isUp,
+                responseTime: result.responseTime,
+              });
+              // Emit a Socket.IO event to the frontend
+            } catch (error) {
+              console.error(`Failed to ping ${url} for user ${userId}:`, error);
+            }
+          })
+        );
+      })
+    );
+
+    console.log("5mins Cron completed successfully, see you in 5✌.");
+  } catch (error) {
+    console.error("Error in cron job:", error);
+  }
+});

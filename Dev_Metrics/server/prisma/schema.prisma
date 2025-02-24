@@ -29,7 +29,7 @@ model website {
   url       String   @unique
  contact_mode  String   @default("E-mail") 
   alert_when    String   @default("URL becomes unavailable") 
-  userId    String
+  userId    String 
   createdAt DateTime @default(now())
   user      users    @relation(fields: [userId], references: [id], onDelete: Cascade)
   updatedAt   DateTime @updatedAt
@@ -39,19 +39,19 @@ model website {
 
 model statusCheck {
   id          String   @id @default(uuid())
-  websiteId   String
+  websiteId   String 
   statusCode  Int
   responseTime Float
-  dnsTime       Float?   // DNS resolution time
-  headers       String?  // Response headers as JSON
-  contentSize   Int?     // Response body size in bytes
-  contentEncoding String? // Content encoding (e.g., gzip)
-  redirectCount Int?     // Number of redirects
-  finalUrl      String?  // Final URL after redirects
-  sslInfo       String?  // SSL/TLS certificate info as JSON
-  geoLocation   String?  // Geographic location as JSON
+  dnsTime       Float?   
+  headers       String?  
+  contentSize   Int?     
+  contentEncoding String? 
+  redirectCount Int?   
+  finalUrl      String?  
+  sslInfo       String?  
+  geoLocation   String? 
   error         String?
-  errorType     String?  // Type of error (e.g., DNS, timeout)
+  errorType     String?  
   errorStack    String?  
   createdAt   DateTime @default(now())
   isUp        Boolean
@@ -63,14 +63,14 @@ model statusCheck {
 
 
 model websiteDailySummary {
-  id              String   @id @default(uuid())  // Use UUID for consistency
+  id              String   @id @default(uuid())  
   websiteId       String
-  date            DateTime  // Store the date
+  date            DateTime  
   uptimeCount     Int
   downtimeCount   Int
   uptimePercentage Float
 
   website         website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
 
-  @@unique([websiteId, date]) // Ensures one summary per website per day
+  @@unique([websiteId, date]) 
 }

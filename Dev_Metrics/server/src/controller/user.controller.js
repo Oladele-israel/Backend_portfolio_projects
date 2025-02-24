@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { validateUserInput, validateLogin } from "../utils/validator.js";
 import jwt from "jsonwebtoken";
+import redis from "../utils/redisClient.js";
 const prisma = new PrismaClient();
 
 // create user
@@ -158,6 +159,16 @@ export const login = async (req, res) => {
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
 
+    await redis.setex(
+      `user:${user.id}`,
+      3600,
+      JSON.stringify({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      })
+    );
+
     return res.status(200).json({
       success: true,
       message: "User logged in successfully",
@@ -176,6 +187,11 @@ export const login = async (req, res) => {
 // logout function
 export const logout = async (req, res) => {
   try {
+    if (req.user) {
+      await redis.del(`user:${req.user.id}`);
+      console.log("User deleted from cache");
+    }
+
     res.clearCookie("Juice");
     res.clearCookie("Sauce");
     console.log("User logged out successfully");
@@ -191,7 +207,7 @@ export const logout = async (req, res) => {
 };
 
 export const validateToken = (req, res) => {
-  const authUser = req.user; // Ensure `req.user` is populated by your authentication middleware
+  const authUser = req.user;
   if (!authUser) {
     return res.status(401).json({
       success: false,

@@ -52,23 +52,39 @@ export const monitor = async (req, res) => {
 export const websiteCheck = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
-
-  console.log("this is ther web id---->", id);
-  console.log("this is ther userid---->", userId);
+  const { page = 1, limit = 10 } = req.query;
 
   try {
     const website = await prisma.website.findUnique({
       where: { id, userId },
-      include: { statusChecks: true },
+      include: {
+        statusChecks: {
+          skip: (page - 1) * limit,
+          take: +limit,
+          orderBy: { checkedAt: "desc" },
+        },
+      },
     });
 
     if (!website) {
       return res.status(404).json({ message: "Website not found" });
     }
 
+    const totalStatusChecks = await prisma.statusCheck.count({
+      where: { websiteId: id },
+    });
+
     res.status(200).json({
       success: true,
-      data: website,
+      data: {
+        ...website,
+        pagination: {
+          totalItems: totalStatusChecks,
+          totalPages: Math.ceil(totalStatusChecks / limit),
+          currentPage: +page,
+          itemsPerPage: +limit,
+        },
+      },
     });
   } catch (error) {
     console.error("Error fetching website:", error);

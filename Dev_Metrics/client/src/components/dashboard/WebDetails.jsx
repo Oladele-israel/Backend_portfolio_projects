@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { SendHorizontal } from "lucide-react";
+import { SendHorizontal, ChevronLeft, ChevronRight } from "lucide-react"; // Import arrow icons
 import axios from "axios";
 import {
   LineChart,
@@ -29,26 +29,39 @@ function getLatestStatusCheck(data) {
 const WebsiteDetails = () => {
   const { id } = useParams();
   const [website, setWebsite] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1); // Total pages for pagination
 
   useEffect(() => {
-    // Fetch website details based on the ID
+    // Fetch website details based on the ID and current page
     const fetchWebsiteDetails = async () => {
-      const response = await axios.get(`${baseURL}/v1/web/websiteCheck/${id}`, {
-        withCredentials: true,
-      });
-      const data = response.data.data;
-      console.log("this is the website details --->", data);
-      setWebsite(data);
+      try {
+        const response = await axios.get(
+          `${baseURL}/v1/web/websiteCheck/${id}`,
+          {
+            params: { page: currentPage, limit: itemsPerPage }, // Pass pagination params
+            withCredentials: true,
+          }
+        );
+        const data = response.data.data;
+        console.log("this is the website details --->", data);
+        setWebsite(data);
+        setTotalPages(data.pagination.totalPages); // Update total pages from backend
+      } catch (error) {
+        console.error("Error fetching website details:", error);
+      }
     };
 
     fetchWebsiteDetails();
-  }, []);
+  }, [id, currentPage, itemsPerPage]); // Re-fetch when page or itemsPerPage changes
 
   if (!website) {
     return <div>Loading...</div>;
   }
-  console.log("this is the lastChecked ---->", getLatestStatusCheck(website));
+
   const lastCheckedDetails = getLatestStatusCheck(website);
+
   // Format date to local time zone
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -64,12 +77,25 @@ const WebsiteDetails = () => {
     return `${diffInDays} days`;
   };
 
-  // data foor graph
+  // Data for graph
   const graphData = website.statusChecks.map((check) => ({
     time: formatDate(check.checkedAt),
     responseTime: check.responseTime,
     status: check.isUp ? "Up" : "Down",
   }));
+
+  // Pagination logic
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   return (
     <div className="text-white p-3 lg:mt-4">
@@ -181,6 +207,31 @@ const WebsiteDetails = () => {
             ))}
           </tbody>
         </table>
+        {/* Pagination Controls */}
+        <div className="flex justify-center mt-4 gap-4">
+          <button
+            onClick={goToPreviousPage}
+            disabled={currentPage === 1}
+            className={`p-2 rounded ${
+              currentPage === 1
+                ? "bg-zinc-700 text-zinc-400 cursor-not-allowed"
+                : "bg-[#51E0CF] text-black hover:bg-[#339c90]"
+            }`}
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            onClick={goToNextPage}
+            disabled={currentPage === totalPages}
+            className={`p-2 rounded ${
+              currentPage === totalPages
+                ? "bg-zinc-700 text-zinc-400 cursor-not-allowed"
+                : "bg-[#51E0CF] text-black hover:bg-[#339c90]"
+            }`}
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
       </div>
     </div>
   );

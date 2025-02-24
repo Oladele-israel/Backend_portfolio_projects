@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
+import redis from "../utils/redisClient.js";
 
 const prisma = new PrismaClient();
 
@@ -28,6 +29,13 @@ export const checkAndRenewToken = async (req, res, next) => {
       try {
         const decoded = await verifyToken(accessToken, process.env.JUICE);
         userId = decoded.access2;
+        const cachedUser = await redis.get(`user:${userId}`);
+
+        if (cachedUser) {
+          req.user = JSON.parse(cachedUser);
+          console.log("cache hit");
+          return next();
+        }
       } catch (err) {
         return res
           .status(401)
@@ -65,7 +73,8 @@ export const checkAndRenewToken = async (req, res, next) => {
           secure: false,
           maxAge: 15 * 60 * 1000, // 15 minutes
         });
-
+        // cache the user for 1hr
+        await redis.setex(`user:${user.id}`, 3600, JSON.stringify(user));
         // Attach the user to the request object
         req.user = user;
       } catch (err) {

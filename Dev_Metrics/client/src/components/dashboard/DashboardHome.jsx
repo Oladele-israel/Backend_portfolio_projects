@@ -1,35 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+// import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { EllipsisVertical } from "lucide-react";
+
 import { useAuthContext } from "../../contexts/authContext.jsx";
 
 const DashboardHome = () => {
   const { userDetails, statusCheck } = useAuthContext();
-  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
-  const dropdownRef = useRef(null);
 
   console.log("this is the website ---->", statusCheck);
-
-  const toggleDropdown = (index) => {
-    setOpenDropdownIndex(openDropdownIndex === index ? null : index);
-  };
-
-  const closeDropdown = () => {
-    setOpenDropdownIndex(null);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        closeDropdown();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   return (
     <div className="text-white pt-10 max-w-7xl">
@@ -55,7 +32,7 @@ const DashboardHome = () => {
             Monitors
           </div>
 
-          {statusCheck.map((website, index) => (
+          {statusCheck.map((website) => (
             <div
               key={website.id}
               className="flex items-center justify-between mt-4 w-[95%] border-b pb-5 border-b-zinc-900 hover:bg-zinc-400 hover:bg-opacity-10 transition-colors duration-200 p-2"
@@ -75,37 +52,6 @@ const DashboardHome = () => {
                   <span className="text-gray-300">
                     {new Date(website.checkedAt).toLocaleString()}
                   </span>
-                  {/* <div className="relative" ref={dropdownRef}>
-                    <EllipsisVertical
-                      className="ml-6 cursor-pointer"
-                      onClick={() => toggleDropdown(index)}
-                    /> */}
-                  {/* {openDropdownIndex === index && (
-                      <div className="absolute right-0 mt-2 w-48 bg-zinc-900 text-slate-200 rounded-md shadow-lg z-10 p-2 capitalize">
-                        <Link
-                          to="#"
-                          className="block px-4 py-2 hover:bg-zinc-800 rounded-md"
-                          onClick={closeDropdown}
-                        >
-                          View Incidents
-                        </Link>
-                        <Link
-                          to={`/dashboard/web_details/${website.id}`} // Corrected link
-                          className="block px-4 py-2 hover:bg-zinc-800 rounded-md"
-                          onClick={closeDropdown}
-                        >
-                          view web Details
-                        </Link>
-                        <Link
-                          to="#"
-                          className="block px-4 py-2 hover:bg-zinc-800 rounded-md text-red-500 font-bold "
-                          onClick={closeDropdown}
-                        >
-                          Remove site
-                        </Link>
-                      </div>
-                    )} */}
-                  {/* </div> */}
                 </div>
               </div>
             </div>
