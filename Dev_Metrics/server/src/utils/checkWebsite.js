@@ -6,6 +6,7 @@ import { performance } from "perf_hooks";
 import https from "https";
 import ipinfo from "ipinfo";
 import { getUserSocket, io } from "../index.js";
+import redis from "./redisClient.js";
 
 const prisma = new PrismaClient();
 
@@ -151,64 +152,6 @@ const getSSLCertificateInfo = async (url) => {
   });
 };
 
-// cron job to ping  the websitwe every 5mins and saves the request in the database
-// cron job to ping the website every 5 minutes and save the request in the database
-// cron.schedule("*/5 * * * *", async () => {
-//   console.log("Running 5mins ping cron...");
-
-//   try {
-//     // Fetch all websites with associated users in one query
-//     const websites = await prisma.website.findMany({
-//       select: { url: true, userId: true },
-//     });
-
-//     if (websites.length === 0) {
-//       console.log("No websites found to check.");
-//       return;
-//     }
-
-//     // Group websites by userId
-//     const websitesByUser = websites.reduce((acc, { userId, url }) => {
-//       if (!acc[userId]) acc[userId] = [];
-//       acc[userId].push(url);
-//       return acc;
-//     }, {});
-
-//     // Ping all websites concurrently
-//     await Promise.all(
-//       Object.entries(websitesByUser).map(async ([userId, urls]) => {
-//         console.log(`Pinging ${urls.length} websites for user: ${userId}`);
-
-//         await Promise.all(
-//           urls.map(async (url) => {
-//             try {
-//               const result = await pingWebsite(url, userId);
-//               io.to(getUserSocket(userId)).emit("websiteStatusUpdate", {
-//                 url,
-//                 id,
-//                 isUp: result.isUp,
-//                 responseTime: result.responseTime,
-//                 checkedAt: new Date().toISOString(),
-//               });
-//               console.log(`Sent update to user ${userId} for ${url}:`, {
-//                 isUp: result.isUp,
-//                 responseTime: result.responseTime,
-//               });
-//               // Emit a Socket.IO event to the frontend
-//             } catch (error) {
-//               console.error(`Failed to ping ${url} for user ${userId}:`, error);
-//             }
-//           })
-//         );
-//       })
-//     );
-
-//     console.log("5mins Cron completed successfully, see you in 5✌.");
-//   } catch (error) {
-//     console.error("Error in cron job:", error);
-//   }
-// });
-
 // Cron job to aggregate data and delete old entries at 12:00 AM midnight
 cron.schedule("0 0 * * *", async () => {
   console.log("Running aggregation and cleanup cron job...");
@@ -297,7 +240,7 @@ cron.schedule("*/5 * * * *", async () => {
   try {
     // Fetch all websites with associated users and their IDs in one query
     const websites = await prisma.website.findMany({
-      select: { id: true, url: true, userId: true }, // Include the website ID
+      select: { id: true, url: true, userId: true },
     });
 
     if (websites.length === 0) {
@@ -339,6 +282,9 @@ cron.schedule("*/5 * * * *", async () => {
             }
           })
         );
+        await redis.del(`websites:${userId}`);
+        await redis.del(`websiteCheck:${userId}:*`); // Clear status check cache
+        console.log(`Cache cleared for user ${userId}`);
       })
     );
 

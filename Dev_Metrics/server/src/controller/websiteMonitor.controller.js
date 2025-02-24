@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { pingWebsite } from "../utils/checkWebsite.js";
+import redis from "../utils/redisClient.js";
 const prisma = new PrismaClient();
 
 // a controller that gets and saves the weburl on the database and then starts the monitoring
@@ -32,6 +33,8 @@ export const monitor = async (req, res) => {
       },
     });
 
+    await redis.del(`websites:${userId}`);
+
     const result = await pingWebsite(url, userId); // Assuming pingWebsite is a function to monitor the website
 
     return res.json({
@@ -54,7 +57,15 @@ export const websiteCheck = async (req, res) => {
   const userId = req.user.id;
   const { page = 1, limit = 10 } = req.query;
 
+  const cacheKey = `websiteCheck:${userId}:${id}:page:${page}:limit:${limit}`;
+
   try {
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+      console.log("cache hit for website");
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+
     const website = await prisma.website.findUnique({
       where: { id, userId },
       include: {
@@ -94,17 +105,15 @@ export const websiteCheck = async (req, res) => {
 
 // function that fethes and deletes website by id
 export const deleteWebsiteById = async (req, res) => {
-  const { id } = req.params; // Extract website ID from request parameters
-  const userId = req.user.id; // Extract user ID from the authenticated user
+  const { id } = req.params;
+  const userId = req.user.id;
 
   try {
-    // Step 1: Fetch the website by ID and ensure it belongs to the user
     const website = await prisma.website.findUnique({
-      where: { id }, // IDs are UUIDs, no need to parse as integer
-      include: { statusChecks: true, dailySummaries: true }, // Include related records
+      where: { id },
+      include: { statusChecks: true, dailySummaries: true },
     });
 
-    // Step 2: Check if the website exists and belongs to the user
     if (!website) {
       return res.status(404).json({ message: "Website not found" });
     }
@@ -115,17 +124,16 @@ export const deleteWebsiteById = async (req, res) => {
         .json({ message: "Unauthorized: You do not own this website" });
     }
 
-    // Step 3: Delete the website and its associated data (cascades handled in Prisma schema)
     await prisma.website.delete({
       where: { id },
     });
 
-    // Step 4: Return success response
+    await redis.del(`websites:${userId}`);
+
     res
       .status(200)
       .json({ message: "Website and associated data deleted successfully" });
   } catch (error) {
-    // Step 5: Handle errors
     console.error("Error deleting website:", error);
     res.status(500).json({ message: "Internal server error" });
   }
@@ -138,6 +146,17 @@ export const getWebsitesByUser = async (req, res) => {
 
   try {
     // Fetch all websites associated with the user
+    const cacheKey = `websites:${userId}`;
+    const cachedWebsites = await redis.get(cacheKey);
+
+    if (cachedWebsites) {
+      console.log("Fetching websites from cache");
+      return res.status(200).json({
+        success: true,
+        data: JSON.parse(cachedWebsites),
+      });
+    }
+
     const websites = await prisma.website.findMany({
       where: { userId },
       include: { statusChecks: true }, // Include the status checks for each website
@@ -149,6 +168,7 @@ export const getWebsitesByUser = async (req, res) => {
         .json({ message: "No websites found for this user" });
     }
 
+    await redis.set(cacheKey, JSON.stringify(websites), "EX", 300);
     res.status(200).json({
       success: true,
       data: websites,
